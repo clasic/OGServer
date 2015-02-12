@@ -1,5 +1,14 @@
 package net.ogserver.tcp;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+
+
 /*
 * Copyright (c) 2015
 * Christian Tucker.  All rights reserved.
@@ -40,11 +49,74 @@ package net.ogserver.tcp;
  */
 public class TcpProcessor implements Runnable {
 	
-	public TcpProcessor(int port) {
-		
+	public void run() {
+		try (Selector selector = Selector.open();
+				ServerSocketChannel serverSocket = ServerSocketChannel.open()) { 
+			if((serverSocket.isOpen()) && (selector.isOpen())) {
+				serverSocket.configureBlocking(false);
+				serverSocket.bind(new InetSocketAddress(TcpServer.getPort()));
+				serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+				System.out.println("[OGServer]: waiting for connections...");
+				while(!Thread.interrupted()) {
+					selector.select();
+					Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
+					while(keys.hasNext()) {
+						SelectionKey key = (SelectionKey) keys.next();
+						keys.remove();
+						
+						if(!key.isValid()) {
+							continue;
+						}
+						if(key.isAcceptable()) {
+							acceptKey(key, selector);
+						} else if(key.isReadable()) {
+							processData(key);
+						}
+					}
+				}
+				if(Thread.interrupted()) {
+					selector.close();
+					serverSocket.close();
+				}
+			} else {
+				System.err.println("Failure to initialize the server, perhaps the socket or selector is closed?");
+				System.err.println("Socket state: " + ((serverSocket.isOpen() ? "Open" : "Closed")) + " || Selector state: " + ((selector.isOpen() ? "Open" : "Closed")));
+			}
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
-	public void run() {
+	/**
+	 * Called by the {@link TcpProcessor} logic thread whenever a {@link SelectionKey}'s
+	 * {@link SelectionKey#isAcceptable()} value is set to true. The primary function of
+	 * this method is to accept a connection and prepare it for future network communication.
+	 * 
+	 * @param key	The {@link SelectionKey} relative to the connection.
+	 * @param selector	The {@link Selector} being used by the server.
+	 * @throws IOExcepton
+	 */
+	private void acceptKey(SelectionKey key, Selector selector) throws IOException {
+		ServerSocketChannel serverSocket = (ServerSocketChannel)key.channel();
+		SocketChannel 		clientSocket = serverSocket.accept();
+		clientSocket.configureBlocking(false);
+		
+		System.out.println("Incoming connection from " + clientSocket.getRemoteAddress());
+	
+		SelectionKey clientKey = clientSocket.register(selector, SelectionKey.OP_READ);
+		
+		clientKey.attach(new Session(clientKey));
+	}
+	
+	/**
+	 * Called by the {@link TcpProcessor} logic thread whenever a {@link SelectionKey}'s
+	 * {@link SelectionKey#isReadable()} value is set to true. The primary function of this
+	 * method is to process the incoming {@link PacketOpcode} and locate the correct method
+	 * to call with the available data.
+	 * 
+	 * @param key	The {@link SelectionKey} relative to the connection.
+	 */
+	private void processData(SelectionKey key) {
 		
 	}
 

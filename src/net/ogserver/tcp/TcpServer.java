@@ -69,7 +69,16 @@ public class TcpServer {
 	public TcpServer(int port, boolean nagles) {
 		TcpServer.serverPort = port;
 		TcpServer.nagles = nagles;
-		TcpServer.tcpProcessor = new Thread(new TcpProcessor(port));
+		TcpServer.tcpProcessor = new Thread(new TcpProcessor());
+		TcpServer.tcpProcessor.start();
+	}
+	
+	/**
+	 * Interrupts the {@link Thread} that the {@link TcpProcessor} and closes down all 
+	 * sockets and selectors.
+	 */
+	public static void shutdown() {
+		TcpServer.getProcessor().interrupt();
 	}
 	
 	/**
