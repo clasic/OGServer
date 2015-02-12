@@ -49,6 +49,11 @@ public class TcpServer {
 	private static int serverPort;
 	
 	/**
+	 * The server configuration for the usage of the <a href="http://en.wikipedia.org/wiki/Nagle%27s_algorithm">Nagles algorithm</a>.
+	 */
+	private static boolean nagles;
+	
+	/**
 	 * The {@link Thread} in which the {@link TcpProcessor} is handling all
 	 * networking communications for the server.
 	 */
@@ -62,7 +67,9 @@ public class TcpServer {
 	 * @param nagles	If the server should be using <a href="http://en.wikipedia.org/wiki/Nagle%27s_algorithm">Nagles algorithm</a>.
 	 */
 	public TcpServer(int port, boolean nagles) {
-		
+		TcpServer.serverPort = port;
+		TcpServer.nagles = nagles;
+		TcpServer.tcpProcessor = new Thread(new TcpProcessor(port));
 	}
 	
 	/**
@@ -73,6 +80,15 @@ public class TcpServer {
 	 */
 	public static Thread getProcessor() {
 		return tcpProcessor;
+	}
+	
+	/**
+	 * Returns the server configuration for the usage of the <a href="http://en.wikipedia.org/wiki/Nagle%27s_algorithm">Nagles algorithm</a>.
+	 *
+	 * @return	If the server is using <a href="http://en.wikipedia.org/wiki/Nagle%27s_algorithm">Nagles algorithm</a>.
+	 */
+	public static boolean usingNagles() {
+		return nagles;
 	}
 	
 	/**

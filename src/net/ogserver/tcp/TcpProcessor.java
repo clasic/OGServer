@@ -40,6 +40,10 @@ package net.ogserver.tcp;
  */
 public class TcpProcessor implements Runnable {
 	
+	public TcpProcessor(int port) {
+		
+	}
+	
 	public void run() {
 		
 	}
