@@ -44,7 +44,7 @@ public class TcpServer {
 	/**
 	 * The port in which the {@link TcpServer} is listening on.
 	 * 
-	 * @note	Multiple servers cannot be run on the same port.
+	 * <p><strong>Note:</strong> Multiple servers cannot be run on the same port.</p>
 	 */
 	private static int serverPort;
 	
@@ -94,7 +94,7 @@ public class TcpServer {
 	/**
 	 * Returns the port in which the {@link TcpServer} is listening on.
 	 * 
-	 * @note	Multiple servers cannot be run on the same port.
+	 * <p><strong>Note:</strong> Multiple servers cannot be run on the same port.</p>
 	 * @return	The port.
 	 */
 	public static int getPort() {
