@@ -55,6 +55,17 @@ public class TcpServer {
 	private static Thread tcpProcessor;
 	
 	/**
+	 * Constructs, configures and prepares a {@link TcpServer} instance for listening over 
+	 * the networking on the specified port and settings.
+	 * 
+	 * @param port	The port that the server should be listening on.
+	 * @param nagles	If the server should be using <a href="http://en.wikipedia.org/wiki/Nagle%27s_algorithm">Nagles algorithm</a>.
+	 */
+	public TcpServer(int port, boolean nagles) {
+		
+	}
+	
+	/**
 	 * Returns the {@link Thread} in which the {@link TcpProcessor} is handling all
 	 * networking communications for the server.
 	 * 
@@ -63,7 +74,6 @@ public class TcpServer {
 	public static Thread getProcessor() {
 		return tcpProcessor;
 	}
-	
 	
 	/**
 	 * Returns the port in which the {@link TcpServer} is listening on.
