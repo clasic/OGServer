@@ -38,6 +38,10 @@ package net.ogserver.tcp;
  * 
  * @author Christian Tucker
  */
-public class TcpProcessor {
+public class TcpProcessor implements Runnable {
+	
+	public void run() {
+		
+	}
 
 }

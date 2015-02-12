@@ -41,4 +41,37 @@ package net.ogserver.tcp;
  */
 public class TcpServer {
 
+	/**
+	 * The port in which the {@link TcpServer} is listening on.
+	 * 
+	 * @note	Multiple servers cannot be run on the same port.
+	 */
+	private static int serverPort;
+	
+	/**
+	 * The {@link Thread} in which the {@link TcpProcessor} is handling all
+	 * networking communications for the server.
+	 */
+	private static Thread tcpProcessor;
+	
+	/**
+	 * Returns the {@link Thread} in which the {@link TcpProcessor} is handling all
+	 * networking communications for the server.
+	 * 
+	 * @return the thread
+	 */
+	public static Thread getProcessor() {
+		return tcpProcessor;
+	}
+	
+	
+	/**
+	 * Returns the port in which the {@link TcpServer} is listening on.
+	 * 
+	 * @note	Multiple servers cannot be run on the same port.
+	 * @return	The port.
+	 */
+	public static int getPort() {
+		return serverPort;
+	}
 }
