@@ -1,6 +1,7 @@
 package net.ogserver.tcp;
 
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -48,6 +49,11 @@ import java.util.Set;
 public class Session {
 
 	/**
+	 * The size(in bytes) of the {@link ByteBuffer} that contains all network input.
+	 */
+	public static final int MAX_NETWORK_INPUT = 1024;
+	
+	/**
 	 * A {@link HashSet} containing a collection of active {@link Session}
 	 * instances.
 	 */
@@ -59,12 +65,29 @@ public class Session {
 	private SelectionKey key;
 	
 	/**
+	 * A {@link ByteBuffer} that contains all of the bytes for incoming
+	 * network data.
+	 */
+	private ByteBuffer inputBuffer;
+		
+	/**
 	 * Constructs a new {@link Session} instance.
 	 * 
 	 * @param key	The key relative to the {@link Session}
 	 */
 	public Session(SelectionKey key) {
 		this.key = key;
+		this.inputBuffer = ByteBuffer.allocate(MAX_NETWORK_INPUT);
+	}
+	
+	/**
+	 * Returns a {@link ByteBuffer} that contains all of the bytes for incoming
+	 * network data.
+	 * 
+	 * @return The {@link ByteBuffer).
+	 */
+	public ByteBuffer getInputBuffer() {
+		return inputBuffer;
 	}
 	
 	/**

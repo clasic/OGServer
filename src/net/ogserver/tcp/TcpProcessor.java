@@ -8,6 +8,8 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
+import net.ogserver.packet.Packet;
+
 
 /*
 * Copyright (c) 2015
@@ -115,8 +117,57 @@ public class TcpProcessor implements Runnable {
 	 * to call with the available data.
 	 * 
 	 * @param key	The {@link SelectionKey} relative to the connection.
+	 * @throws IOException
 	 */
-	private void processData(SelectionKey key) {
+	private void processData(SelectionKey key) throws IOException {
+		Session session = (Session)key.attachment();
+		if(session == null) {
+			System.err.println("Error: processData was called using a SelectionKey that contains no attacment.");
+			key.cancel();
+		}
+		
+		int bytesReceived = 0;
+		boolean endOfStream = ((bytesReceived = session.getChannel().read(session.getInputBuffer())) == -1) ? true : false;
+		if(endOfStream) {
+			key.cancel();
+			session = null;
+			return;
+		}
+		
+		// The header that we're sending with our data is 4 bytes long, which is an Integer
+		// containing the length of the packet in bytes, if the data that we have available
+		// is not at least 4 bytes we will not read anything and wait until the next cycle.
+		if(bytesReceived < 4) {
+			return;
+		}
+		
+		// Flip the ByteBuffer so we can read data in the order that it was sent.
+		session.getInputBuffer().flip();
+		
+		// Read the integer from the buffer that determines the packet's size.
+		int packetLength = session.getInputBuffer().getInt();
+		
+		// Mark the buffer so that we know where we left off in the case that we
+		// do not have enough data to complete the packet and require to read for
+		// multiple iterations.
+		session.getInputBuffer().mark();
+		
+		// Verify that we have enough data to process the entire packet.
+		// Subtract 4 from the amount of bytes read so we don't process the
+		// byte-size of the integer for the packet-length.
+		if((bytesReceived - 4) < packetLength) {
+			// Not enough data was received from the network, so we need to reset the 
+			// Buffer's mark to the previous mark, so we can read this data again during
+			// the next iteration.
+			session.getInputBuffer().reset();
+			return;
+		}
+		
+		Packet._decode(session);
+		
+		// Once the packet has completed being decoded, clear the buffer for future
+		// iterations to process a new packet.
+		session.getInputBuffer().clear();
 		
 	}
 
