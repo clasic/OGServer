@@ -33,12 +33,11 @@ package net.ogserver.tcp;
 */
 
 /**
- * The {@link TcpServer} class is used to initialize the {@link TcpProcessor}
- * class using a specified port. For more information on TCP based networking
- * please view this article here: http://placeholder.com/
+ * The {@link TcpProcessor} class implements the {@link Runnable} interface
+ * to aid in the concurrent asynchronous design. 
  * 
  * @author Christian Tucker
  */
-public class TcpServer {
+public class TcpProcessor {
 
 }
