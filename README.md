@@ -1,2 +1,2 @@
 # OGServer
-Online Server for TCP Connections oriented towards the gaming c roud. 
+Open-Source server written in Java based off the NIO framework. 
