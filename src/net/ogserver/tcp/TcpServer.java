@@ -31,6 +31,14 @@ package net.ogserver.tcp;
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 * THE POSSIBILITY OF SUCH DAMAGE.
 */
+
+/**
+ * The {@link TcpServer} class is used to initialize the {@link TcpProcessor}
+ * class using a specified port. For more information on TCP based networking
+ * please view this article here: http://placeholder.com/
+ * 
+ * @author Christian
+ */
 public class TcpServer {
 
 }
