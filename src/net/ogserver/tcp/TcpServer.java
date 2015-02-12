@@ -17,7 +17,7 @@ package net.ogserver.tcp;
 * Personal usage is only condoned if the following conditions are met:
 *
 * 1. It is required to mention the use of OGServer in your project, either
-*	 Through an opening or closing splash-screen lasting a minimum 3 seconds.
+*	through an opening or closing splash-screen lasting a minimum 3 seconds.
 *    This 'screen' is provided in the OGServer package.
 *
 * THIS SOFTWARE IS PROVIDED 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
