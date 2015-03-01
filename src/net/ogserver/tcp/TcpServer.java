@@ -4,21 +4,7 @@ package net.ogserver.tcp;
 * Copyright (c) 2015
 * Christian Tucker.  All rights reserved.
 *
-* The use of OGServer is free of charge for personal use. 
-*
-* Commercial users are required to purchase a commercial license from
-* the OGServer website at http://ogserver.net/
-*
-* Commercial usage is defined by the amount of concurrent connections
-* that the server is handling at any given time. Once the server reaches
-* a state in which it is handling an average of 10 connections, your 
-* application is classified as 'Commercial'.
-*
-* Personal usage is only condoned if the following conditions are met:
-*
-* 1. It is required to mention the use of OGServer in your project, either
-*    through an opening or closing splash-screen lasting a minimum 3 seconds.
-*    This 'screen' is provided in the OGServer package.
+* The use of OGServer is free of charge for personal and commercial use. *
 *
 * THIS SOFTWARE IS PROVIDED 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
 * BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
@@ -30,6 +16,8 @@ package net.ogserver.tcp;
 * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 * THE POSSIBILITY OF SUCH DAMAGE.
+*  
+*   * Policy subject to change.
 */
 
 /**
@@ -39,6 +27,8 @@ package net.ogserver.tcp;
  * 
  * @author Christian Tucker
  */
+
+
 public class TcpServer {
 
 	/**

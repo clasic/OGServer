@@ -7,29 +7,17 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import net.ogserver.packet.Packet;
+import net.ogserver.tcp.TcpProcessor;
 
 /*
 * Copyright (c) 2015
 * Christian Tucker.  All rights reserved.
 *
-* The use of OGServer is free of charge for personal use. 
-*
-* Commercial users are required to purchase a commercial license from
-* the OGServer website at http://ogserver.net/
-*
-* Commercial usage is defined by the amount of concurrent connections
-* that the server is handling at any given time. Once the server reaches
-* a state in which it is handling an average of 10 connections, your 
-* application is classified as 'Commercial'.
-*
-* Personal usage is only condoned if the following conditions are met:
-*
-* 1. It is required to mention the use of OGServer in your project, either
-*    through an opening or closing splash-screen lasting a minimum 3 seconds.
-*    This 'screen' is provided in the OGServer package.
+* The use of OGServer is free of charge for personal and commercial use. *
 *
 * THIS SOFTWARE IS PROVIDED 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
 * BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
@@ -41,6 +29,8 @@ import java.util.UUID;
 * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 * THE POSSIBILITY OF SUCH DAMAGE.
+*  
+*   * Policy subject to change.
 */
 
 /**
@@ -54,7 +44,7 @@ public class Session {
 	/**
 	 * The size(in bytes) of the {@link ByteBuffer} that contains all network input.
 	 */
-	public static final int MAX_NETWORK_INPUT = 1024;
+	public static final int MAX_NETWORK_INPUT = 512000000; // This is roughly 512 megabytes, only for testing purposes, recommended size is 2048.
 	
 	/**
 	 * A {@link HashSet} containing a collection of active {@link Session}
@@ -84,7 +74,33 @@ public class Session {
 	 * a UDP connection.
 	 */
 	private UUID sessionKey;
-		
+	
+	/**
+	 * A boolean value containing rather or not the TcpStream has been
+	 * segmented between multiple reads of the {@link SelectionKey}.
+	 * This value is always false during the first read of a packet.
+	 */
+	private boolean segmented;
+	
+	/**
+	 * The mark relative to the sessions {@link #inputBuffer}, used by the
+	 * {@link TcpProcessor} when the sessions {@link #segmented} state is true.
+	 */
+	private int mark;
+	
+	/**
+	 * A boolean value containing rather or not the TcpStream has
+	 * decoded the header relative to the incoming {@link Packet}.
+	 */
+	private boolean header;
+	
+	/**
+	 * A numerical representation of the amount of bytes the current incoming {@link Packet}
+	 * for this session contains.
+	 */
+	private int blockSize;
+
+	
 	/**
 	 * Constructs a new {@link Session} instance.
 	 * 
@@ -99,6 +115,101 @@ public class Session {
 		System.out.println("New connection was established, session key: " + sessionKey);
 	}
 	
+	/**
+	 * Tells the session to release all data pertaining to the {@link TcpProcessor}.
+	 * Calling this method will set the following values to false (or 0):
+	 * <p>
+	 * <li> {@link #header}.
+	 * <li> {@link #segmented}.
+	 * <li> {@link #blockSize}.
+	 * <li> {@link #mark}.
+	 * <p>
+	 * This will also clear the current content in the {@link #inputBuffer}.
+	 */
+	public void release() {
+		this.header = false;
+		this.segmented = false;
+		this.blockSize = 0;
+		this.mark = 0;
+		this.inputBuffer.clear();
+	}
+	
+	/**
+	 * Returns a numerical representation of the amount of bytes the current incoming {@link Packet}
+	 * for this session.
+	 * 
+	 * @return	The amount of incoming bytes.
+	 */
+	public int blockSize() {
+		return blockSize;
+	}
+	
+	/**
+	 * Sets the value of {@link #blockSize} to the specified value.
+	 * 
+	 * @param blockSize	The value.
+	 */
+	public void setBlockSize(int blockSize) {
+		this.blockSize = blockSize;
+	}
+	
+	/**
+	 * returns a boolean value containing rather or not the TcpStream has
+	 * decoded the header relative to the incoming {@link Packet}.
+	 * 
+	 * @return	rather or not the TcpStream has decoded the header.
+	 */
+	public boolean header() {
+		return header;
+	}
+	
+	/**
+	 * Sets the current {@link #header} state to true, identifying that the
+	 * TcpStream has decoded the header.
+	 */
+	public void prime() {
+		this.header = true;
+	}
+	
+	/**
+	 * Returns the mark relative to the sessions {@link #inputBuffer}, used by the
+	 * {@link TcpProcessor} when the sessions {@link #segmented} state is true.
+	 * 
+	 * @return	The mark.
+	 */
+	public int mark() {
+		return mark;
+	}
+	
+	/**
+	 * Sets the current {@link #mark} to equal the value provided.
+	 * 
+	 * @param mark	The new mark.
+	 */
+	public void mark(int mark) {
+		this.mark = mark;
+	}
+	
+	/**
+	 * Returns a boolean value containing rather or not the TcpStream has been
+	 * segmented between multiple reads of the {@link SelectionKey}.
+	 * This value is always false during the first read of a packet.
+	 * 
+	 * @return	The value of {@link #segmented}
+	 */
+	public boolean segmented() {
+		return segmented;
+	}
+	
+	/**
+	 * Tells the {@link Session} that the Tcp stream is segmented and should persist
+	 * data throughout multiple reads to gather the data required to decode the income
+	 * {@link Packet}.
+	 */
+	public void segment() {
+		this.segmented = true;
+	}
+		
 	/**
 	 * Returns a {@link UUID} that identifies a session.
 	 * @return	The {@link UUID}.

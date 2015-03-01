@@ -1,5 +1,6 @@
 package net.ogserver.packet;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
@@ -14,21 +15,7 @@ import com.google.common.io.ByteStreams;
 * Copyright (c) 2015
 * Christian Tucker.  All rights reserved.
 *
-* The use of OGServer is free of charge for personal use. 
-*
-* Commercial users are required to purchase a commercial license from
-* the OGServer website at http://ogserver.net/
-*
-* Commercial usage is defined by the amount of concurrent connections
-* that the server is handling at any given time. Once the server reaches
-* a state in which it is handling an average of 10 connections, your 
-* application is classified as 'Commercial'.
-*
-* Personal usage is only condoned if the following conditions are met:
-*
-* 1. It is required to mention the use of OGServer in your project, either
-*    through an opening or closing splash-screen lasting a minimum 3 seconds.
-*    This 'screen' is provided in the OGServer package.
+* The use of OGServer is free of charge for personal and commercial use. *
 *
 * THIS SOFTWARE IS PROVIDED 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
 * BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
@@ -40,6 +27,8 @@ import com.google.common.io.ByteStreams;
 * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 * THE POSSIBILITY OF SUCH DAMAGE.
+*  
+*   * Policy subject to change.
 */
 
 /**
@@ -65,11 +54,15 @@ public abstract class Packet {
 	 * @param session	The {@link Session} relative to this {@link Packet}.
 	 */
 	public static void _decode(Session session) {
+		session.getInputBuffer().flip();
+		session.getInputBuffer().getInt(); // copy trash (packet size)
 		int packetOpcode = session.getInputBuffer().getInt();
 		try { 
-			packets.get(packetOpcode).decode(session);
+			packets.get(packetOpcode).decodeTcp(session);
 		} catch (NullPointerException npe) {
 			System.err.println("A packet could not be found with the opcode of: " + packetOpcode);
+		} catch(IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -81,12 +74,15 @@ public abstract class Packet {
 	 * 
 	 * @param session	The {@link Session} relative to this {@link Packet}.
 	 * @param packetOpcode	The {@link PacketOpcode} relative to this {@link Packet}.
+	 * @param udpBuffer	The {@link ByteBuffer} relative to this {@link Packet}.
 	 */
-	public static void _decode(Session session, int packetOpcode) {
+	public static void _decode(Session session, int packetOpcode, ByteBuffer udpBuffer) {
 		try{
-			packets.get(packetOpcode).decode(session);
+			packets.get(packetOpcode).decodeUdp(session, udpBuffer);
 		} catch (NullPointerException npe) {
 			System.err.println("A packet could not be found with the opcode of: " + packetOpcode);
+		} catch(IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -178,6 +174,15 @@ public abstract class Packet {
 		}
 	}
 	
+	public static String getString(ByteBuffer buffer) {
+		int length = buffer.getInt();
+		String data = "";
+		for(int i = 0; i < length; i++) {
+			data += buffer.getChar();
+		}
+		return data;
+	}
+	
 	/**
 	 * The type of the packet.
 	 * 
@@ -191,8 +196,18 @@ public abstract class Packet {
 	 * Used to process data specific to an {@link PacketOpcode}.
 	 * 
 	 * @param session	The {@link Session} relative to this {@link Packet}.
+	 * @throws IOException 
 	 */
-	public abstract void decode(Session session);
+	public abstract void decodeTcp(Session session) throws IOException;
+	
+	/**
+	 * Used to process data specific to an {@link PacketOpcode}.
+	 * 
+	 * @param session	The {@link Session} relative to this {@link Packet}.
+	 * @param udpBuffer	The {@link ByteBuffer} relative to this {@link Packet}.
+	 * 	 * @throws IOException 
+	 */
+	public abstract void decodeUdp(Session session, ByteBuffer udpBuffer) throws IOException;
 	
 	/**
 	 * Returns a collection of {@link Packet}'s relative to their {@link PacketOpcode}'s.

@@ -2,6 +2,7 @@ package net.ogserver.tcp;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -10,27 +11,13 @@ import java.util.Iterator;
 
 import net.ogserver.common.Session;
 import net.ogserver.packet.Packet;
-
+import net.ogserver.packet.PacketOpcode;
 
 /*
 * Copyright (c) 2015
 * Christian Tucker.  All rights reserved.
 *
-* The use of OGServer is free of charge for personal use. 
-*
-* Commercial users are required to purchase a commercial license from
-* the OGServer website at http://ogserver.net/
-*
-* Commercial usage is defined by the amount of concurrent connections
-* that the server is handling at any given time. Once the server reaches
-* a state in which it is handling an average of 10 connections, your 
-* application is classified as 'Commercial'.
-*
-* Personal usage is only condoned if the following conditions are met:
-*
-* 1. It is required to mention the use of OGServer in your project, either
-*    through an opening or closing splash-screen lasting a minimum 3 seconds.
-*    This 'screen' is provided in the OGServer package.
+* The use of OGServer is free of charge for personal and commercial use. *
 *
 * THIS SOFTWARE IS PROVIDED 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
 * BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
@@ -42,6 +29,8 @@ import net.ogserver.packet.Packet;
 * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 * THE POSSIBILITY OF SUCH DAMAGE.
+*  
+*   * Policy subject to change.
 */
 
 /**
@@ -133,19 +122,21 @@ public class TcpProcessor implements Runnable {
 	 * @throws IOException
 	 */
 	private void processData(SelectionKey key) throws IOException {
-		Session session = (Session)key.attachment();
+		Session session = (Session)key.attachment();		
 		if(session == null) {
 			System.err.println("Error: processData was called using a SelectionKey that contains no attacment.");
 			key.cancel();
 		}
-		
+				
 		int bytesReceived = 0;
 		boolean endOfStream = ((bytesReceived = session.getChannel().read(session.getInputBuffer())) == -1) ? true : false;
 		if(endOfStream) {
+			session.segment();
 			key.cancel();
-			session = null;
 			return;
 		}
+
+		bytesReceived += session.mark();
 		
 		// The header that we're sending with our data is 4 bytes long, which is an Integer
 		// containing the length of the packet in bytes, if the data that we have available
@@ -153,34 +144,37 @@ public class TcpProcessor implements Runnable {
 		if(bytesReceived < 4) {
 			return;
 		}
+	
+		if(!session.segmented() && !session.header()) {
+			ByteBuffer buffer = session.getInputBuffer().duplicate();
+			buffer.flip();
+			
+			session.setBlockSize(buffer.getInt());
+			System.out.println("Packet length: " + session.blockSize());
+			System.out.println("Bytes received: " + (bytesReceived - 4));
 		
-		// Flip the ByteBuffer so we can read data in the order that it was sent.
-		session.getInputBuffer().flip();
+			session.getInputBuffer().mark();
+			session.prime();
+		} 
+	
 		
-		// Read the integer from the buffer that determines the packet's size.
-		int packetLength = session.getInputBuffer().getInt();
-		
-		// Mark the buffer so that we know where we left off in the case that we
-		// do not have enough data to complete the packet and require to read for
-		// multiple iterations.
-		session.getInputBuffer().mark();
 		
 		// Verify that we have enough data to process the entire packet.
 		// Subtract 4 from the amount of bytes read so we don't process the
 		// byte-size of the integer for the packet-length.
-		if((bytesReceived - 4) < packetLength) {
-			// Not enough data was received from the network, so we need to reset the 
+		if((bytesReceived - 4) < session.blockSize()) {
+			// Not enough data was received from the network, so we nBecaueed to reset the 
 			// Buffer's mark to the previous mark, so we can read this data again during
 			// the next iteration.
-			session.getInputBuffer().reset();
+			System.out.println("Current data received: ( "+(bytesReceived - 4)+" / "+session.blockSize()+" )");
+			session.mark(bytesReceived);
+			session.getInputBuffer().mark();
 			return;
+		} else {
+			session.mark(bytesReceived);
+			Packet._decode(session);
+			session.release();
 		}
-		
-		Packet._decode(session);
-		
-		// Once the packet has completed being decoded, clear the buffer for future
-		// iterations to process a new packet.
-		session.getInputBuffer().clear();
 		
 	}
 
