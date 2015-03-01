@@ -1,9 +1,14 @@
 package net.ogserver.packet;
 
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
 import net.ogserver.tcp.Session;
+
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 
 /*
 * Copyright (c) 2015
@@ -68,6 +73,94 @@ public abstract class Packet {
 	}
 	
 	/**
+	 * Sends a packet to all connected accounts.
+	 * 
+	 * @param type			The type of packet.
+	 * @param packetId		The id of the packet.
+	 * @param data			The object[] of data.
+	 */
+	public static void sendGlobal(PacketType type, int packetId, Object... data) {
+		Session.getSessions().forEach(u -> {
+			Packet.send(type, u.getChannel(), packetId, data);
+		});
+	}
+	
+	/**
+	 * Sends a packet to all connected accounts, albeit
+	 * the account with the specified account id.
+	 * 
+	 * @param type			The type of packet.
+	 * @param accountId		The id of the account to ignore.
+	 * @param packetId		The id of the packet.
+	 * @param data			The object[] of data.
+	 */
+	public static void sendGlobalAlbeit(PacketType type, int accountId, int packetId, Object... data) {
+		Session.getSessions().forEach(u -> {
+			Packet.send(type, u.getChannel(), packetId, data);
+		});
+	}
+	
+	/**
+	 * Sends a packet to the specified connection.
+	 * 
+	 * @param connection		The connection to send the packet to.
+	 * @param packetId			The id of the packet.
+	 * @param data				The object[] of data.
+	 */
+	public static void send(PacketType type, SocketChannel channel, int packetId, Object... data) {
+		ByteArrayDataOutput preBuffer = ByteStreams.newDataOutput();
+		ByteArrayDataOutput postBuffer = ByteStreams.newDataOutput();
+		postBuffer.writeInt((int)packetId);
+		try {
+			if(data.length > 0) {
+				for(Object o : data) {
+					if(o instanceof Integer) {
+						postBuffer.writeInt((int)o);
+					} else if(o instanceof Character) {
+						postBuffer.writeChar((char)o);
+					} else if(o instanceof String) {
+						String string = (String)o;
+						char[] charArray = string.toCharArray();
+						int length = charArray.length;
+						postBuffer.writeInt(length);
+						for(int i = 0; i < length; i++) {
+							postBuffer.writeChar(charArray[i]);
+						}
+					} else if(o instanceof Double) {
+						postBuffer.writeDouble((double)o);
+					} else if(o instanceof Float) {
+						postBuffer.writeFloat((float)o);
+					} else if(o instanceof Boolean) {
+						postBuffer.writeByte((byte)(((boolean)o) ? 1 : 0));
+					} else if(o instanceof Byte) {
+						postBuffer.writeByte((byte)o);
+					} else if(o instanceof Long) {
+						postBuffer.writeLong((long)o);
+					}
+					else {
+					}
+				}
+			} 
+			preBuffer.writeInt(postBuffer.toByteArray().length);
+			preBuffer.write(postBuffer.toByteArray());
+			ByteBuffer writable = ByteBuffer.wrap(preBuffer.toByteArray());
+			channel.write(writable);
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * The type of the packet.
+	 * 
+	 * @author Christian
+	 */
+	public enum PacketType {
+		TCP, UDP
+	}
+	
+	/**
 	 * Used to process data specific to an {@link PacketOpcode}.
 	 * 
 	 * @param session	The {@link Session} relative to this {@link Packet}.
@@ -81,5 +174,14 @@ public abstract class Packet {
 	 */
 	public static Map<Integer, Packet> getPackets() {
 		return packets;
+	}
+	
+	public static void add(Packet packet) {
+		if(packet.getClass().getAnnotation(PacketOpcode.class) == null) {
+			System.err.println("Packet: " + packet + " does not contain a PacketOpcodeHeader!");
+			return;
+		}
+		packets.put(packet.getClass().getAnnotation(PacketOpcode.class).value(), packet);
+		System.out.println("Packet: " + packet + " was successfully added to processing queue.");
 	}
 }

@@ -55,30 +55,42 @@ public class TcpProcessor implements Runnable {
 		try (Selector selector = Selector.open();
 				ServerSocketChannel serverSocket = ServerSocketChannel.open()) { 
 			if((serverSocket.isOpen()) && (selector.isOpen())) {
-				serverSocket.configureBlocking(false);
-				serverSocket.bind(new InetSocketAddress(TcpServer.getPort()));
-				serverSocket.register(selector, SelectionKey.OP_ACCEPT);
-				System.out.println("[OGServer]: waiting for connections...");
-				while(!Thread.interrupted()) {
-					selector.select();
-					Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
-					while(keys.hasNext()) {
-						SelectionKey key = (SelectionKey) keys.next();
-						keys.remove();
-						
-						if(!key.isValid()) {
-							continue;
-						}
-						if(key.isAcceptable()) {
-							acceptKey(key, selector);
-						} else if(key.isReadable()) {
-							processData(key);
+				try {
+					serverSocket.configureBlocking(false);
+					serverSocket.bind(new InetSocketAddress(TcpServer.getPort()));
+					serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+					System.out.println("[OGServer]: waiting for connections...");
+					while(!Thread.interrupted()) {
+						selector.select();
+						Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
+						while(keys.hasNext()) {
+							SelectionKey key = (SelectionKey) keys.next();
+							keys.remove();
+							if(!key.isValid()) {
+								continue;
+							}
+							try {	
+								if(key.isAcceptable()) {
+									acceptKey(key, selector);
+								} else if(key.isReadable()) {
+									processData(key);
+								}
+							} catch (IOException e) {
+								if(e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
+									System.err.println("A connection has been lost for key: " + key);
+									key.cancel();
+									continue;
+								}
+								e.printStackTrace();
+							}
 						}
 					}
-				}
-				if(Thread.interrupted()) {
-					selector.close();
-					serverSocket.close();
+					if(Thread.interrupted()) {
+						selector.close();
+						serverSocket.close();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 			} else {
 				System.err.println("Failure to initialize the server, perhaps the socket or selector is closed?");
