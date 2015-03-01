@@ -5,7 +5,7 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.ogserver.tcp.Session;
+import net.ogserver.common.Session;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -59,13 +59,31 @@ public abstract class Packet {
 	/**
 	 * <strong>For internal usage only.</strong> The _decode method is used to process
 	 * the {@link PacketOpcode} from the ByteBuffer, find the associated {@link Packet}
-	 * and invoke the {@link Packet#decode(Session)} method on it.
+	 * and invoke the {@link Packet#decode(Session)} method on it. This method is used for
+	 * packets relative to the {@link TcpServer}.
 	 * 
 	 * @param session	The {@link Session} relative to this {@link Packet}.
 	 */
 	public static void _decode(Session session) {
 		int packetOpcode = session.getInputBuffer().getInt();
 		try { 
+			packets.get(packetOpcode).decode(session);
+		} catch (NullPointerException npe) {
+			System.err.println("A packet could not be found with the opcode of: " + packetOpcode);
+		}
+	}
+	
+	/**
+	 * <strong>For internal usage only.</strong> The _decode method is used to processs
+	 * the {@link PacketOpcode} from the BYteBuffer, find the associated {@link Packet}
+	 * and invoke the {@link Packet#decode(Session)} method on it. This method is used for
+	 * packets relative to the {@link UdpServer}.
+	 * 
+	 * @param session	The {@link Session} relative to this {@link Packet}.
+	 * @param packetOpcode	The {@link PacketOpcode} relative to this {@link Packet}.
+	 */
+	public static void _decode(Session session, int packetOpcode) {
+		try{
 			packets.get(packetOpcode).decode(session);
 		} catch (NullPointerException npe) {
 			System.err.println("A packet could not be found with the opcode of: " + packetOpcode);
@@ -111,6 +129,9 @@ public abstract class Packet {
 		ByteArrayDataOutput preBuffer = ByteStreams.newDataOutput();
 		ByteArrayDataOutput postBuffer = ByteStreams.newDataOutput();
 		postBuffer.writeInt((int)packetId);
+		if(type == PacketType.UDP) {
+			// postBuffer.write(UDP KEY - SESSION)
+		}
 		try {
 			if(data.length > 0) {
 				for(Object o : data) {
@@ -141,10 +162,16 @@ public abstract class Packet {
 					}
 				}
 			} 
+			
 			preBuffer.writeInt(postBuffer.toByteArray().length);
 			preBuffer.write(postBuffer.toByteArray());
 			ByteBuffer writable = ByteBuffer.wrap(preBuffer.toByteArray());
-			channel.write(writable);
+			
+			if(type == PacketType.TCP) {
+				channel.write(writable);
+			} else if(type == PacketType.UDP) {
+				
+			}
 			
 		} catch(Exception e) {
 			e.printStackTrace();

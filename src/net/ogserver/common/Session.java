@@ -1,12 +1,15 @@
-package net.ogserver.tcp;
+package net.ogserver.common;
 
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /*
 * Copyright (c) 2015
@@ -60,6 +63,12 @@ public class Session {
 	private static Set<Session> currentSessions = new HashSet<>();
 	
 	/**
+	 * A {@link HashMap} containing a collection of active {@link Session}'s
+	 * sorted by their respected {@link #sessionKey}.
+	 */
+	private static HashMap<UUID, Session> sessionMap = new HashMap<>();
+	
+	/**
 	 * The {@link SelectionKey} relative to the {@link Session}.
 	 */
 	private SelectionKey key;
@@ -69,6 +78,12 @@ public class Session {
 	 * network data.
 	 */
 	private ByteBuffer inputBuffer;
+	
+	/**
+	 * A {@link UUID} that will identify each session when exchanging data over
+	 * a UDP connection.
+	 */
+	private UUID sessionKey;
 		
 	/**
 	 * Constructs a new {@link Session} instance.
@@ -78,13 +93,25 @@ public class Session {
 	public Session(SelectionKey key) {
 		this.key = key;
 		this.inputBuffer = ByteBuffer.allocate(MAX_NETWORK_INPUT);
+		this.sessionKey = UUID.randomUUID();
+		currentSessions.add(this);
+		sessionMap.put(sessionKey,  this);
+		System.out.println("New connection was established, session key: " + sessionKey);
+	}
+	
+	/**
+	 * Returns a {@link UUID} that identifies a session.
+	 * @return	The {@link UUID}.
+	 */
+	public UUID getSessionKey() {
+		return sessionKey;
 	}
 	
 	/**
 	 * Returns a {@link ByteBuffer} that contains all of the bytes for incoming
 	 * network data.
 	 * 
-	 * @return The {@link ByteBuffer).
+	 * @return The {@link ByteBuffer}.
 	 */
 	public ByteBuffer getInputBuffer() {
 		return inputBuffer;
@@ -125,6 +152,16 @@ public class Session {
 	 */
 	public static Set<Session> getSessions() {
 		return currentSessions;
+	}
+	
+	/**
+	 * Returns a {@link HashMap} containing a collection of active {@link Session}'s
+	 * sorted by their {@link #sessionKey}.
+	 * 
+	 * @return	The {@link HashMap}.
+	 */
+	public static HashMap<UUID, Session> getSessionMap() {
+		return sessionMap;
 	}
 	
 }

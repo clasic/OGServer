@@ -8,6 +8,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
+import net.ogserver.common.Session;
 import net.ogserver.packet.Packet;
 
 
