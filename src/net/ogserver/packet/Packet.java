@@ -176,6 +176,11 @@ public abstract class Packet {
 		return packets;
 	}
 	
+	/**
+	 * Adds a {@link Packet} to the {@link #packets} collection.
+	 * 
+	 * @param packet	The packet.
+	 */
 	public static void add(Packet packet) {
 		if(packet.getClass().getAnnotation(PacketOpcode.class) == null) {
 			System.err.println("Packet: " + packet + " does not contain a PacketOpcodeHeader!");
