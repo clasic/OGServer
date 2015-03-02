@@ -11,6 +11,18 @@ public class Config {
 	 * will not be possible.
 	 */
 	public static boolean enableUDP = false;
+	
+	/**
+	 * The maximum size of an incoming Datagram packet to be decoded by the {@link UdpServer}.
+	 * Default value: 1024 bytes.
+	 */
+	public static int datagramBlockSize = 1024;
+	
+	/**
+	 * The port that the {@link UdpServer} will be listening for Datagram packets
+	 * on (Default: 5056).
+	 */
+	public static int datagramPort = 5056;
 
 	/**
 	 * The size(in bytes) of the {@link ByteBuffer} that contains all network input.

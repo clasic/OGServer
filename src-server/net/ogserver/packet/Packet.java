@@ -1,11 +1,13 @@
 package net.ogserver.packet;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.ogserver.common.Config;
 import net.ogserver.common.Log;
 import net.ogserver.common.Session;
 import net.ogserver.tcp.TcpServer;
@@ -99,7 +101,7 @@ public abstract class Packet {
 	 */
 	public static void sendGlobal(PacketType type, int packetId, Object... data) {
 		Session.getSessions().forEach(u -> {
-			Packet.send(type, u.getChannel(), packetId, data);
+			Packet.send(type, u, packetId, data);
 		});
 	}
 	
@@ -114,7 +116,7 @@ public abstract class Packet {
 	 */
 	public static void sendGlobalAlbeit(PacketType type, int accountId, int packetId, Object... data) {
 		Session.getSessions().forEach(u -> {
-			Packet.send(type, u.getChannel(), packetId, data);
+			Packet.send(type, u, packetId, data);
 		});
 	}
 	
@@ -125,12 +127,13 @@ public abstract class Packet {
 	 * @param packetId			The id of the packet.
 	 * @param data				The object[] of data.
 	 */
-	public static void send(PacketType type, SocketChannel channel, int packetId, Object... data) {
+	public static void send(PacketType type, Session session, int packetId, Object... data) {
 		ByteArrayDataOutput preBuffer = ByteStreams.newDataOutput();
 		ByteArrayDataOutput postBuffer = ByteStreams.newDataOutput();
 		postBuffer.writeInt((int)packetId);
 		if(type == PacketType.UDP) {
-			// postBuffer.write(UDP KEY - SESSION)
+			postBuffer.writeLong(session.getSessionKey().getMostSignificantBits());
+			postBuffer.writeLong(session.getSessionKey().getLeastSignificantBits());
 		}
 		try {
 			if(data.length > 0) {
@@ -167,9 +170,13 @@ public abstract class Packet {
 			
 			if(type == PacketType.TCP) {
 				Log.debug("Server sent " + writable.limit() + " bytes with an opcode of " + packetId);
-				channel.write(writable);
+				session.getChannel().write(writable);
 			} else if(type == PacketType.UDP) {
-				
+				if(Config.enableUDP) {
+					new DatagramPacket(writable.array(), writable.array().length, InetAddress.getByName(session.getChannel().getRemoteAddress().toString()), Config.datagramPort);
+				} else {
+					Log.error("UDP is currently disabled, please check configurations.");
+				}
 			}
 			
 		} catch(Exception e) {

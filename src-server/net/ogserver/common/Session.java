@@ -115,7 +115,7 @@ public class Session {
 		sessionMap.put(sessionKey,  this);
 		Log.info("New connection was established, session key: " + sessionKey);
 		if(Config.enableUDP) {
-			Packet.send(PacketType.TCP, getChannel(), 0, sessionKey.getMostSignificantBits(), sessionKey.getLeastSignificantBits());
+			Packet.send(PacketType.TCP, this, 0, sessionKey.getMostSignificantBits(), sessionKey.getLeastSignificantBits());
 		}
 	}
 	

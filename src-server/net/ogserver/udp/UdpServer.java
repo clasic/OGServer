@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.util.UUID;
 
+import net.ogserver.common.Config;
 import net.ogserver.common.Session;
 import net.ogserver.packet.Packet;
 
@@ -40,9 +41,7 @@ import net.ogserver.packet.Packet;
 public class UdpServer implements Runnable {
 
 	private DatagramChannel channel;
-	
-	private int maxPacketSize;
-	
+		
 	private ByteBuffer udpBuffer;
 	
 	/**
@@ -53,15 +52,14 @@ public class UdpServer implements Runnable {
 	 * @param port	The port.
 	 * @param maxPacketSize	The max size.
 	 */
-	public UdpServer(int port, int maxPacketSize) {
+	public UdpServer() {
 		if(channel != null && channel.isOpen()) {
 			System.err.println("The UDP DatagramChannel is already open.");
 			return;
 		} try {
-			this.maxPacketSize = maxPacketSize;
 			this.channel = DatagramChannel.open();
-			this.channel.socket().bind(new InetSocketAddress(port));
-			this.udpBuffer = ByteBuffer.allocateDirect(maxPacketSize);
+			this.channel.socket().bind(new InetSocketAddress(Config.datagramPort));
+			this.udpBuffer = ByteBuffer.allocateDirect(Config.datagramBlockSize);
 			new Thread(this).start();
 		} catch(IOException e) {
 			e.printStackTrace();
@@ -84,7 +82,7 @@ public class UdpServer implements Runnable {
 				Session session = Session.getSessionMap().get(new UUID(mostSigBits, leastSigBits));
 				Packet._decode(session, packetId, udpBuffer);
 				udpBuffer.clear();
-				udpBuffer = ByteBuffer.allocateDirect(maxPacketSize);
+				udpBuffer = ByteBuffer.allocateDirect(Config.datagramBlockSize);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
