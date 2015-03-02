@@ -28,8 +28,6 @@ import java.util.UUID;
 
 import net.ogserver.common.Session;
 import net.ogserver.packet.Packet;
-import net.ogserver.tcp.TcpProcessor;
-import net.ogserver.tcp.TcpServer;
 
 /**
  * This class is designed to handle data incoming over a UDP or Datagram connection.
