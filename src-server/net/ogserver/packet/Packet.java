@@ -154,8 +154,6 @@ public abstract class Packet {
 					} else if(o instanceof Long) {
 						postBuffer.writeLong((long)o);
 					}
-					else {
-					}
 				}
 			} 
 			
@@ -164,6 +162,7 @@ public abstract class Packet {
 			ByteBuffer writable = ByteBuffer.wrap(preBuffer.toByteArray());
 			
 			if(type == PacketType.TCP) {
+				System.out.println("Server sent " + writable.limit() + " bytes");
 				channel.write(writable);
 			} else if(type == PacketType.UDP) {
 				
