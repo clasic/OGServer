@@ -1,5 +1,6 @@
 package net.ogserver.common;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
@@ -115,6 +116,22 @@ public class Session {
 		Log.info("New connection was established, session key: " + sessionKey);
 		if(Config.enableUDP) {
 			Packet.send(PacketType.TCP, getChannel(), 0, sessionKey.getMostSignificantBits(), sessionKey.getLeastSignificantBits());
+		}
+	}
+	
+	/**
+	 * Removes all references to the session from collections and closes the 
+	 * associated buffers and channels.
+	 */
+	public void close() {
+		try {
+			currentSessions.remove(this);
+			sessionMap.remove(sessionKey);
+			inputBuffer = null;
+			getChannel().close();
+			key.attach(null);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	

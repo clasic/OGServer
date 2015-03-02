@@ -69,6 +69,11 @@ public class TcpProcessor implements Runnable {
 							} catch (IOException e) {
 								if(e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
 									Log.info("A connection has been lost for key: " + key);
+									if(((Session)key.attachment() != null)) {
+										((Session)key.attachment()).close();
+									} else {
+										key.channel().close();
+									}
 									key.cancel();
 									continue;
 								}
