@@ -6,7 +6,6 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.ogserver.common.Config;
 import net.ogserver.common.Log;
 import net.ogserver.common.Session;
 import net.ogserver.tcp.TcpServer;
