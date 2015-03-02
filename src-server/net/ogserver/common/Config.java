@@ -1,5 +1,7 @@
 package net.ogserver.common;
 
+import java.nio.ByteBuffer;
+
 public class Config {
 
 	/**
@@ -9,5 +11,10 @@ public class Config {
 	 * will not be possible.
 	 */
 	public static boolean enableUDP = false;
+
+	/**
+	 * The size(in bytes) of the {@link ByteBuffer} that contains all network input.
+	 */
+	public static int tcpBufferAllocation = 2048000; // Default value (2048000 is roughly 2MB);
 	
 }

@@ -41,11 +41,6 @@ import net.ogserver.tcp.TcpProcessor;
  * @author Christian Tucker
  */
 public class Session {
-
-	/**
-	 * The size(in bytes) of the {@link ByteBuffer} that contains all network input.
-	 */
-	public static final int MAX_NETWORK_INPUT = 512000000; // This is roughly 512 megabytes, only for testing purposes, recommended size is 2048.
 	
 	/**
 	 * A {@link HashSet} containing a collection of active {@link Session}
@@ -109,7 +104,7 @@ public class Session {
 	 */
 	public Session(SelectionKey key) {
 		this.key = key;
-		this.inputBuffer = ByteBuffer.allocate(MAX_NETWORK_INPUT);
+		this.inputBuffer = ByteBuffer.allocate(Config.tcpBufferAllocation);
 		this.sessionKey = UUID.randomUUID();
 		currentSessions.add(this);
 		sessionMap.put(sessionKey,  this);
