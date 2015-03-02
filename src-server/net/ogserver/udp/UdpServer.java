@@ -40,8 +40,14 @@ import net.ogserver.packet.Packet;
  */
 public class UdpServer implements Runnable {
 
+	/**
+	 * The {@link DatagramChannel}.
+	 */
 	private DatagramChannel channel;
 		
+	/**
+	 * The buffer that all data is written to when received by the {@link DatagramChannel}.
+	 */
 	private ByteBuffer udpBuffer;
 	
 	/**
