@@ -95,8 +95,12 @@ public class Session {
 	 * for this session contains.
 	 */
 	private int blockSize;
-
 	
+	/**
+	 * A {@link Object} that is attached to the {@link Session}.
+	 */
+	private Object attachment;
+
 	/**
 	 * Constructs a new {@link Session} instance.
 	 * 
@@ -112,6 +116,23 @@ public class Session {
 		if(Config.enableUDP) {
 			Packet.send(PacketType.TCP, getChannel(), 0, sessionKey.getMostSignificantBits(), sessionKey.getLeastSignificantBits());
 		}
+	}
+	
+	/**
+	 * Returns the {@link Object} attached to this session.
+	 * 
+	 * @return	The object.
+	 */
+	public Object getAttachment() {
+		return attachment;
+	}
+	
+	/**
+	 * Sets the {@link Session}'s attachment to the specified {@link Object}.
+	 * @param attatchment	The {@link Object}.
+	 */
+	public void attatch(Object attachment) {
+		this.attachment = attachment;
 	}
 	
 	/**
