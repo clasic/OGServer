@@ -9,6 +9,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
+import net.ogserver.common.Log;
 import net.ogserver.common.Session;
 import net.ogserver.packet.Packet;
 import net.ogserver.packet.PacketOpcode;
@@ -49,7 +50,7 @@ public class TcpProcessor implements Runnable {
 					serverSocket.configureBlocking(false);
 					serverSocket.bind(new InetSocketAddress(TcpServer.getPort()));
 					serverSocket.register(selector, SelectionKey.OP_ACCEPT);
-					System.out.println("[OGServer]: waiting for connections...");
+					Log.info("waiting for connections...");
 					while(!Thread.interrupted()) {
 						selector.select();
 						Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
@@ -67,7 +68,7 @@ public class TcpProcessor implements Runnable {
 								}
 							} catch (IOException e) {
 								if(e.getMessage().equals("An existing connection was forcibly closed by the remote host")) {
-									System.err.println("A connection has been lost for key: " + key);
+									Log.info("A connection has been lost for key: " + key);
 									key.cancel();
 									continue;
 								}
@@ -83,8 +84,8 @@ public class TcpProcessor implements Runnable {
 					e.printStackTrace();
 				}
 			} else {
-				System.err.println("Failure to initialize the server, perhaps the socket or selector is closed?");
-				System.err.println("Socket state: " + ((serverSocket.isOpen() ? "Open" : "Closed")) + " || Selector state: " + ((selector.isOpen() ? "Open" : "Closed")));
+				Log.error("Failure to initialize the server, perhaps the socket or selector is closed?");
+				Log.info("Socket state: " + ((serverSocket.isOpen() ? "Open" : "Closed")) + " || Selector state: " + ((selector.isOpen() ? "Open" : "Closed")));
 			}
 		} catch(IOException e) {
 			e.printStackTrace();
@@ -105,7 +106,7 @@ public class TcpProcessor implements Runnable {
 		SocketChannel 		clientSocket = serverSocket.accept();
 		clientSocket.configureBlocking(false);
 		
-		System.out.println("Incoming connection from " + clientSocket.getRemoteAddress());
+		Log.info("Incoming connection from " + clientSocket.getRemoteAddress());
 	
 		SelectionKey clientKey = clientSocket.register(selector, SelectionKey.OP_READ);
 		
@@ -124,7 +125,7 @@ public class TcpProcessor implements Runnable {
 	private void processData(SelectionKey key) throws IOException {
 		Session session = (Session)key.attachment();		
 		if(session == null) {
-			System.err.println("Error: processData was called using a SelectionKey that contains no attacment.");
+			Log.error("processData was called using a SelectionKey that contains no attacment.");
 			key.cancel();
 		}
 				
@@ -147,14 +148,12 @@ public class TcpProcessor implements Runnable {
 	
 		if(!session.segmented() && !session.header()) {
 			ByteBuffer buffer = session.getInputBuffer().duplicate();
-			buffer.flip();
-			
-			session.setBlockSize(buffer.getInt());
-			System.out.println("Packet length: " + session.blockSize());
-			System.out.println("Bytes received: " + (bytesReceived - 4));
-		
+			buffer.flip();	
+			session.setBlockSize(buffer.getInt());		
 			session.getInputBuffer().mark();
 			session.prime();
+			
+			Log.debug("[TCP] - Incoming packet size(in bytes): " + session.blockSize());
 		} 
 	
 		
@@ -166,7 +165,7 @@ public class TcpProcessor implements Runnable {
 			// Not enough data was received from the network, so we nBecaueed to reset the 
 			// Buffer's mark to the previous mark, so we can read this data again during
 			// the next iteration.
-			System.out.println("Current data received: ( "+(bytesReceived - 4)+" / "+session.blockSize()+" )");
+			Log.debug("[TCP] - Current data received: ( "+(bytesReceived - 4)+" / "+session.blockSize()+" )");
 			session.mark(bytesReceived);
 			session.getInputBuffer().mark();
 			return;

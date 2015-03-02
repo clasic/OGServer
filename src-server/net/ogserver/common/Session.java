@@ -112,7 +112,7 @@ public class Session {
 		this.sessionKey = UUID.randomUUID();
 		currentSessions.add(this);
 		sessionMap.put(sessionKey,  this);
-		System.out.println("New connection was established, session key: " + sessionKey);
+		Log.info("New connection was established, session key: " + sessionKey);
 		if(Config.enableUDP) {
 			Packet.send(PacketType.TCP, getChannel(), 0, sessionKey.getMostSignificantBits(), sessionKey.getLeastSignificantBits());
 		}

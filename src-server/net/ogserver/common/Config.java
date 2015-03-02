@@ -17,4 +17,9 @@ public class Config {
 	 */
 	public static int tcpBufferAllocation = 2048000; // Default value (2048000 is roughly 2MB);
 	
+	
+	/**
+	 * Rather or not the server is printing debug messages, the default value is false.
+	 */
+	public static boolean debugging = false;
 }

@@ -6,7 +6,11 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.ogserver.common.Config;
+import net.ogserver.common.Log;
 import net.ogserver.common.Session;
+import net.ogserver.tcp.TcpServer;
+import net.ogserver.udp.UdpServer;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -57,10 +61,11 @@ public abstract class Packet {
 		session.getInputBuffer().flip();
 		session.getInputBuffer().getInt(); // copy trash (packet size)
 		int packetOpcode = session.getInputBuffer().getInt();
+		Log.debug("Incoming packet has an id of " + packetOpcode);
 		try { 
 			packets.get(packetOpcode).decodeTcp(session);
 		} catch (NullPointerException npe) {
-			System.err.println("A packet could not be found with the opcode of: " + packetOpcode);
+			Log.error("[TCP] - A packet could not be found with the opcode of: " + packetOpcode);
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
@@ -80,7 +85,7 @@ public abstract class Packet {
 		try{
 			packets.get(packetOpcode).decodeUdp(session, udpBuffer);
 		} catch (NullPointerException npe) {
-			System.err.println("A packet could not be found with the opcode of: " + packetOpcode);
+			Log.error("[UDP] - A packet could not be found with the opcode of: " + packetOpcode);
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
@@ -162,7 +167,7 @@ public abstract class Packet {
 			ByteBuffer writable = ByteBuffer.wrap(preBuffer.toByteArray());
 			
 			if(type == PacketType.TCP) {
-				System.out.println("Server sent " + writable.limit() + " bytes");
+				Log.debug("Server sent " + writable.limit() + " bytes with an opcode of " + packetId);
 				channel.write(writable);
 			} else if(type == PacketType.UDP) {
 				
@@ -224,10 +229,10 @@ public abstract class Packet {
 	 */
 	public static void add(Packet packet) {
 		if(packet.getClass().getAnnotation(PacketOpcode.class) == null) {
-			System.err.println("Packet: " + packet + " does not contain a PacketOpcodeHeader!");
+			Log.error("Packet: " + packet + " does not contain a PacketOpcodeHeader!");
 			return;
 		}
 		packets.put(packet.getClass().getAnnotation(PacketOpcode.class).value(), packet);
-		System.out.println("Packet: " + packet + " was successfully added to processing queue.");
+		Log.info("Packet: " + packet + " was successfully added to processing queue.");
 	}
 }
