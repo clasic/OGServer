@@ -28,7 +28,17 @@ import java.util.UUID;
 
 import net.ogserver.common.Session;
 import net.ogserver.packet.Packet;
+import net.ogserver.tcp.TcpProcessor;
+import net.ogserver.tcp.TcpServer;
 
+/**
+ * This class is designed to handle data incoming over a UDP or Datagram connection.
+ * <p>
+ * The {@link UdpServer} class implements the {@link Runnable} interface
+ * to aid in the concurrent asynchronous design.  
+ * 
+ * @author Christian Tucker
+ */
 public class UdpServer implements Runnable {
 
 	private DatagramChannel channel;
@@ -37,8 +47,16 @@ public class UdpServer implements Runnable {
 	
 	private ByteBuffer udpBuffer;
 	
+	/**
+	 * Creates an instance of the {@link UdpServer} class which will process all
+	 * incoming data over the networking pertaining to the UDP socket listening on
+	 * the specified port. Incoming packets will have a max size of the specified value.
+	 * 
+	 * @param port	The port.
+	 * @param maxPacketSize	The max size.
+	 */
 	public UdpServer(int port, int maxPacketSize) {
-		if(channel.isOpen()) {
+		if(channel != null && channel.isOpen()) {
 			System.err.println("The UDP DatagramChannel is already open.");
 			return;
 		} try {
@@ -46,11 +64,16 @@ public class UdpServer implements Runnable {
 			this.channel = DatagramChannel.open();
 			this.channel.socket().bind(new InetSocketAddress(port));
 			this.udpBuffer = ByteBuffer.allocateDirect(maxPacketSize);
+			new Thread(this).start();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
+	/**
+	 * The method called by the {@link Runnable} interface, used to process all incoming
+	 * data over the network coming in through the UDP socket.
+	 */
 	public void run() {
 		while(!Thread.interrupted()) {
 			try {
@@ -58,9 +81,9 @@ public class UdpServer implements Runnable {
 				udpBuffer.flip();
 				udpBuffer.getInt();
 				int packetId = udpBuffer.getInt();
-				long leastSigBits = udpBuffer.getLong();
 				long mostSigBits = udpBuffer.getLong();
-				Session session = Session.getSessionMap().get(new UUID(leastSigBits, mostSigBits));
+				long leastSigBits = udpBuffer.getLong();
+				Session session = Session.getSessionMap().get(new UUID(mostSigBits, leastSigBits));
 				Packet._decode(session, packetId, udpBuffer);
 				udpBuffer.clear();
 				udpBuffer = ByteBuffer.allocateDirect(maxPacketSize);
@@ -70,6 +93,11 @@ public class UdpServer implements Runnable {
 		}
 	}
 	
+	/**
+	 * Returns the channel relative to this {@link UdpServer}.
+	 * 
+	 * @return	The Channel.
+	 */
 	public DatagramChannel getChannel() {
 		return channel;
 	}

@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import net.ogserver.packet.Packet;
+import net.ogserver.packet.Packet.PacketType;
 import net.ogserver.tcp.TcpProcessor;
 
 /*
@@ -113,6 +114,9 @@ public class Session {
 		currentSessions.add(this);
 		sessionMap.put(sessionKey,  this);
 		System.out.println("New connection was established, session key: " + sessionKey);
+		if(Config.enableUDP) {
+			Packet.send(PacketType.TCP, getChannel(), 0, sessionKey.getMostSignificantBits(), sessionKey.getLeastSignificantBits());
+		}
 	}
 	
 	/**
