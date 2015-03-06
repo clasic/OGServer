@@ -94,6 +94,7 @@ public class GUI extends JFrame implements Runnable {
 			Session.bytesOutCurrent = 0;
 		} catch(Exception e) {
 			e.printStackTrace();
+			this.setEnabled(false);
 			serverTick.shutdown();
 		}
 	}
