@@ -170,7 +170,9 @@ public abstract class Packet {
 			
 			if(type == PacketType.TCP) {
 				Log.debug("Server sent " + writable.limit() + " bytes with an opcode of " + packetId);
-				session.getChannel().write(writable);
+				int bytes = session.getChannel().write(writable);
+				Session.bytesOut += bytes;
+				Session.bytesOutCurrent += bytes;
 			} else if(type == PacketType.UDP) {
 				if(Config.enableUDP) {
 					new DatagramPacket(writable.array(), writable.array().length, InetAddress.getByName(session.getChannel().getRemoteAddress().toString()), Config.datagramPort);

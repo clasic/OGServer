@@ -1,5 +1,8 @@
 package net.ogserver.tcp;
 
+import net.ogserver.common.Config;
+import net.ogserver.gui.GUI;
+
 /*
 * Copyright (c) 2015
 * Christian Tucker.  All rights reserved.
@@ -61,6 +64,9 @@ public class TcpServer {
 		TcpServer.nagles = nagles;
 		TcpServer.tcpProcessor = new Thread(new TcpProcessor());
 		TcpServer.tcpProcessor.start();
+		if(Config.launchGUI) {
+			new GUI();
+		}
 	}
 	
 	/**

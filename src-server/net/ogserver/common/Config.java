@@ -1,5 +1,25 @@
 package net.ogserver.common;
 
+/*
+* Copyright (c) 2015
+* Christian Tucker.  All rights reserved.
+*
+* The use of OGServer is free of charge for personal and commercial use. *
+*
+* THIS SOFTWARE IS PROVIDED 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
+* BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+* PARTICULAR PURPOSE, OR NON-INFRINGEMENT, ARE DISCLAIMED.  
+* IN NO EVENT SHALL THE AUTHOR  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+* PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+* INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+* CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+* ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+* THE POSSIBILITY OF SUCH DAMAGE.
+*  
+*   * Policy subject to change.
+*/
+
 import java.nio.ByteBuffer;
 
 public class Config {
@@ -42,4 +62,12 @@ public class Config {
 	 * Default Value: false.
 	 */
 	public static boolean debugging = false;
+	
+	/**
+	 * Rather or not the server launches a GUI using the Java {@link JFrame} class
+	 * to show real-time statistics, this is just a base for the real-time web administration.
+	 * 
+	 * Default Value: false.
+	 */
+	public static boolean launchGUI = false;
 }

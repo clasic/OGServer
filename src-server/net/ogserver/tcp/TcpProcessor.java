@@ -141,7 +141,10 @@ public class TcpProcessor implements Runnable {
 			key.cancel();
 			return;
 		}
-
+		
+		Session.bytesIn += bytesReceived;
+		Session.bytesInCurrent += bytesReceived;
+		
 		bytesReceived += session.mark();
 		
 		// The header that we're sending with our data is 4 bytes long, which is an Integer

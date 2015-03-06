@@ -44,6 +44,26 @@ import net.ogserver.tcp.TcpProcessor;
 public class Session {
 	
 	/**
+	 * The total amount of bytes that have been received by the server.
+	 */
+	public static long bytesIn;
+	
+	/**
+	 * The total amount of bytes received by the server in the last 1000ms.
+	 */
+	public static long bytesInCurrent;
+	
+	/**
+	 * The total amount of bytes that have been sent by the server.
+	 */
+	public static long bytesOut;
+	
+	/**
+	 * The total amount of bytes sent by the server in the last 1000ms.
+	 */
+	public static int bytesOutCurrent;
+	
+	/**
 	 * A {@link HashSet} containing a collection of active {@link Session}
 	 * instances.
 	 */
